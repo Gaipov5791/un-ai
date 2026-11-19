@@ -1,0 +1,16 @@
+[project]
+name = "un-ai-agent"
+version = "0.1.0"
+description = "un-ai voice receptionist for Kyrgyzstan"
+requires-python = ">=3.10,<3.15"
+dependencies = [
+  "livekit-agents>=1.6.9",
+  "python-dotenv>=1.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

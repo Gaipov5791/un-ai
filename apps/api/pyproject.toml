@@ -1,0 +1,15 @@
+[project]
+name = "un-ai-api"
+version = "0.1.0"
+description = "un-ai token API for browser calls"
+requires-python = ">=3.10,<3.15"
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.32.0",
+  "livekit-api>=1.0.0",
+  "python-dotenv>=1.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

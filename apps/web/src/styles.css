@@ -1,0 +1,151 @@
+:root {
+  color: #111827;
+  background: #f7f8fa;
+  font-family: Inter, Segoe UI, system-ui, sans-serif;
+  line-height: 1.45;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 20px 64px;
+}
+
+.brand {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-size: 20px;
+}
+
+.hero {
+  width: min(560px, 100%);
+  margin-top: 48px;
+  text-align: center;
+}
+
+.hero h1 {
+  margin: 12px 0 8px;
+  font-size: 32px;
+  letter-spacing: -0.03em;
+}
+
+.hero p {
+  margin: 0;
+  color: #4b5563;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e8eefc;
+  color: #1d4ed8;
+  font-size: 13px;
+}
+
+.panel {
+  width: min(560px, 100%);
+  margin-top: 28px;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+}
+
+.lang-switch {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+button.lang {
+  flex: 1;
+  background: #f3f4f6;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+}
+
+button.lang.active {
+  background: #1d4ed8;
+  color: #fff;
+  border-color: #1d4ed8;
+}
+
+.status {
+  min-height: 24px;
+  margin: 0 0 16px;
+  color: #374151;
+  font-size: 14px;
+}
+
+.error {
+  color: #b91c1c;
+}
+
+.visualizer {
+  height: 88px;
+  margin-bottom: 16px;
+}
+
+.caption {
+  min-height: 140px;
+  margin: 0 0 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #111827;
+  font-size: 22px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button.primary {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+button.ghost {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hints {
+  width: min(560px, 100%);
+  margin-top: 20px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.hints li {
+  margin-bottom: 6px;
+}
