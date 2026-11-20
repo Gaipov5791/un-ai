@@ -1,18 +1,21 @@
 export type AgentLanguage = "ky" | "ru";
+export type CockpitMode = "demo" | "live";
+export type MobileTab = "cockpit" | "hud";
 
-export interface MessageItem {
+export interface ChatMessage {
   id: string;
   sender: "user" | "agent";
   text: string;
   time: string;
-  status?: "speaking" | "sent" | "typing";
+  lang: AgentLanguage;
+  serviceTag?: string;
 }
 
-export interface BookingSlot {
-  service?: string;
-  doctor?: string;
-  datetime?: string;
-  clientName?: string;
-  phone?: string;
-  status: "idle" | "collecting" | "confirmed";
+export interface ExtractedData {
+  service: string | null;
+  time: string | null;
+  name: string | null;
+  intent: "booking" | "faq" | "transfer" | "idle";
 }
+
+export type OrbState = "idle" | "connecting" | "listening" | "thinking" | "speaking" | "writing";
