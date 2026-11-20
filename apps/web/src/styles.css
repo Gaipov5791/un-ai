@@ -81,6 +81,18 @@ button.lang.active {
   border-color: #1d4ed8;
 }
 
+.voice-notice {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
 .status {
   min-height: 24px;
   margin: 0 0 16px;

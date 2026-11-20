@@ -180,6 +180,11 @@ function TalkBooth() {
           disabled={connected || busy}
           onChange={setLanguage}
         />
+        {language === "ky" ? (
+          <p className="voice-notice" role="status">
+            Кыргызский голосовой в разработке. Появится скоро.
+          </p>
+        ) : null}
         {connected ? <CallStatus language={language} /> : <p className="status">{copy.ready}</p>}
         {error ? <p className="status error">{error}</p> : null}
         <div className="actions">
