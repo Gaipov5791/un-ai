@@ -1,0 +1,20 @@
+services:
+  kani:
+    build:
+      context: .
+      args:
+        TORCH_INDEX: ${TORCH_INDEX:-https://download.pytorch.org/whl/cpu}
+    ports:
+      - "${KANI_PORT:-8090}:8090"
+    environment:
+      KANI_MODEL: ${KANI_MODEL:-nineninesix/kani-tts-400m-ky}
+      KANI_DEVICE: ${KANI_DEVICE:-auto}
+      KANI_VOICE: ${KANI_VOICE:-elina}
+      KANI_PRELOAD: ${KANI_PRELOAD:-1}
+      KANI_API_KEY: ${KANI_API_KEY:-}
+      HF_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      - kani-cache:/root/.cache/huggingface
+
+volumes:
+  kani-cache:

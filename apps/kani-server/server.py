@@ -1,25 +1,40 @@
-"""OpenAI-compatible KaniTTS for a test GPU (Kaggle T4). Wraps kani-tts, no custom vocoder."""
+"""OpenAI-compatible KaniTTS sidecar for Kyrgyz replies.
+
+The Node agent POSTs /v1/audio/speech. Russian stays on Cartesia and never
+calls this process. If the model is not ready, /health is not "ok" and the
+agent keeps the existing on-screen Kyrgyz reply.
+"""
 
 from __future__ import annotations
 
-import io
-import os
-import threading
+import logging
+from contextlib import asynccontextmanager
 from typing import Optional
 
-import numpy as np
-import soundfile as sf
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
-SAMPLE_RATE = 22050
-MODEL_ID = os.getenv("KANI_MODEL", "nineninesix/kani-tts-400m-ky")
-DEFAULT_VOICE = os.getenv("KANI_VOICE", "elina")
+from audio import to_wav_bytes
+from config import accepts_api_key, load_settings, prepare_process_device, public_error
+from engine import EnginePool
 
-app = FastAPI(title="un-ai kani-tts")
-_lock = threading.Lock()
-_engine = None
+logger = logging.getLogger("un-ai.kani")
+
+settings = load_settings()
+prepare_process_device(settings.device)
+pool = EnginePool(settings)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    if settings.preload:
+        logger.info("loading %s on %s", settings.model, settings.device)
+        pool.preload_async()
+    yield
+
+
+app = FastAPI(title="un-ai kani-tts", lifespan=lifespan)
 
 
 class SpeechRequest(BaseModel):
@@ -29,64 +44,44 @@ class SpeechRequest(BaseModel):
     response_format: Optional[str] = "wav"
 
 
-def _load_engine():
-    global _engine
-    if _engine is not None:
-        return _engine
-    from kani_tts import KaniTTS
-
-    _engine = KaniTTS(MODEL_ID, show_info=True, suppress_logs=True)
-    return _engine
-
-
-def _to_wav_bytes(audio) -> bytes:
-    if hasattr(audio, "detach"):
-        audio = audio.detach().cpu().numpy()
-    wave = np.asarray(audio).squeeze()
-    if wave.ndim != 1:
-        raise HTTPException(status_code=500, detail="KaniTTS вернул неожиданную форму аудио")
-    buf = io.BytesIO()
-    sf.write(buf, wave, SAMPLE_RATE, format="WAV", subtype="PCM_16")
-    return buf.getvalue()
-
-
-def _speak(text: str, voice: str):
-    engine = _load_engine()
-    with _lock:
-        try:
-            return engine(text, speaker_id=voice)
-        except TypeError:
-            return engine(text)
-
-
 @app.get("/health")
 def health() -> dict[str, str]:
-    try:
-        import kani_tts  # noqa: F401
-        installed = "yes"
-    except ImportError:
-        installed = "no"
-    return {
-        "status": "ok" if installed == "yes" else "missing_kani_tts",
-        "service": "un-ai-kani",
-        "model": MODEL_ID,
-        "kani_tts": installed,
-        "ready": "yes" if _engine is not None else "no",
-    }
+    return pool.snapshot()
 
 
 @app.post("/v1/audio/speech")
-def speech(request: SpeechRequest) -> Response:
-    text = request.input.strip()
+def speech(body: SpeechRequest, request: Request) -> Response:
+    if not accepts_api_key(settings.api_key, request.headers.get("authorization")):
+        raise HTTPException(status_code=401, detail="invalid api key")
+    text = body.input.strip()
     if not text:
         raise HTTPException(status_code=400, detail="empty input")
-    voice = (request.voice or DEFAULT_VOICE).strip() or DEFAULT_VOICE
+    if body.model and body.model not in {settings.model, "tts-1", "tts-1-hd"}:
+        logger.warning("request model %s ignored; loaded %s", body.model, settings.model)
+    voice = (body.voice or settings.voice).strip() or settings.voice
     try:
-        audio, _generated = _speak(text, voice)
+        audio, _generated = pool.speak(text, voice)
+        wav = to_wav_bytes(audio, pool.sample_rate)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"KaniTTS: {exc}") from exc
+        raise HTTPException(status_code=500, detail=f"KaniTTS: {public_error(exc)}") from exc
     return Response(
-        content=_to_wav_bytes(audio),
+        content=wav,
         media_type="audio/wav",
-        headers={"X-Sample-Rate": str(SAMPLE_RATE), "X-Voice": voice},
+        headers={
+            "X-Sample-Rate": str(pool.sample_rate),
+            "X-Voice": voice,
+            "X-Model": settings.model,
+            "X-Device": pool.device_actual,
+        },
+    )
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        "server:app",
+        host=settings.host,
+        port=settings.port,
+        log_level="info",
     )

@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { createAgent } from "./agent.ts";
 import { CaptionTts } from "./caption-tts.ts";
-import { createKyrgyzTts, kaniSpeechReachable } from "./kani-tts.ts";
+import { createKyrgyzTts, kyrgyzReplyMode, waitUntilKaniReady } from "./kani-tts.ts";
 import { KAZAKH_TO_KYRGYZ } from "./kyrgyz.ts";
 import { lockLanguageForTts } from "./language-lock.ts";
 import { type AgentLanguage } from "./pilot.ts";
@@ -27,7 +27,7 @@ dotenv.config({ path: ".env.local" });
 
 const AGENT_NAME = process.env.UNAI_AGENT_NAME ?? "un-ai-receptionist";
 if (!process.env.KANI_BASE_URL?.trim()) {
-  console.warn("un-ai: KANI_BASE_URL пуст — кыргызский звонок не стартует, пока не поднят KaniTTS на GPU/VPS");
+  console.warn("un-ai: KANI_BASE_URL пуст — кыргызский звонок пойдёт текстом на экран, пока не поднят KaniTTS");
 }
 
 const KY_VOCABULARY = [
@@ -137,7 +137,8 @@ export default defineAgent({
     await ctx.connect();
 
     const language = languageFromJob(ctx);
-    const captions = language === "ky" && !(await kaniSpeechReachable());
+    const voiceReady = language === "ky" && (await waitUntilKaniReady());
+    const captions = language === "ky" && kyrgyzReplyMode(voiceReady) === "text";
     console.log(
       "un-ai: room connected",
       ctx.room.name,
